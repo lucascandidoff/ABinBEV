@@ -21,6 +21,7 @@ __pycache__/
 data/bronze/
 data/silver/
 data/gold/
+data/csv/
 
 # Airflow
 airflow.db
