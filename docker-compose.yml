@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  airflow:
+    image: apache/airflow:2.7.2-python3.10
+    container_name: airflow
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__WEBSERVER__SECRET_KEY=temporary_key
+      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+      - ./data:/opt/airflow/data
+    ports:
+      - "8080:8080"
+    command: webserver
+    depends_on:
+      - scheduler
+
+  scheduler:
+    image: apache/airflow:2.7.2-python3.10
+    container_name: scheduler
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+      - ./data:/opt/airflow/data
+    command: scheduler

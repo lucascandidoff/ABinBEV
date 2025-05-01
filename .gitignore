@@ -1,0 +1,35 @@
+# Ambiente virtual
+.venv/
+venv/
+
+# Cache do Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Logs
+*.log
+
+# Arquivos de configuração temporários
+*.swp
+*.swo
+.env
+.env.*
+
+# Dados locais (caso deseje ignorar os dados gerados no projeto)
+data/bronze/
+data/silver/
+data/gold/
+
+# Airflow
+airflow.db
+airflow.cfg
+logs/
+unittests.cfg
+
+# VSCode
+.vscode/
+
+# Arquivos do MacOS
+.DS_Store

@@ -1,0 +1,5 @@
+pandas
+pyspark
+delta-spark
+requests
+delta-spark==2.3.0
