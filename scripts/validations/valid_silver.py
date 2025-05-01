@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 
 # Path to the Delta table
-BRONZE_PATH = "data/Silver/breweries_silver"
+SILVER_PATH = "data/Silver/breweries_silver"
 
 # Start a Spark session with Delta support
 spark = SparkSession.builder \
@@ -11,10 +11,8 @@ spark = SparkSession.builder \
     .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
     .getOrCreate()
 
-# Load Delta table
-df = spark.read.format("delta").load(BRONZE_PATH)
-# Salvar o DataFrame em um único arquivo CSV
-# df.coalesce(1).write.format("csv").mode("overwrite").option("header", "true").save("data/csv/breweries_silver.csv")
+df = spark.read.format("delta").load(SILVER_PATH)
+df.coalesce(1).write.format("csv").mode("overwrite").option("header", "true").save("data/csv/breweries_silver.csv")
 
 df.printSchema()
 

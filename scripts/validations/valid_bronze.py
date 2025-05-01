@@ -1,8 +1,5 @@
 from pyspark.sql import SparkSession
 
-# Path to the Delta table
-BRONZE_PATH = "data/bronze/breweries_bronze"
-
 # Start a Spark session with Delta support
 spark = SparkSession.builder \
     .appName("Check Bronze Data") \
@@ -13,6 +10,7 @@ spark = SparkSession.builder \
 
 # Load Delta table
 df = spark.read.format("delta").load(BRONZE_PATH)
+df.coalesce(1).write.format("csv").mode("overwrite").option("header", "true").save("data/csv/breweries_bronze.csv")
 
 df.printSchema()
 

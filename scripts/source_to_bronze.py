@@ -2,7 +2,7 @@ import requests
 import os
 import json
 from datetime import datetime
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, current_timestamp
 from pyspark.sql.functions import lit
 
 # Define API endpoint and Delta output path
@@ -29,7 +29,7 @@ def extract_data():
         df_raw = spark.read.json(rdd)
 
         # Optionally add metadata
-        df_raw = df_raw.withColumn("ingestion_date", lit(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        df_raw = df_raw.withColumn("ingestion_date", current_timestamp())
 
         # Write to Delta format
         df_raw.write.format("delta").mode("append").save(BRONZE_PATH)
