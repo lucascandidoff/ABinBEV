@@ -7,9 +7,9 @@ from pyspark.sql.functions import lit
 
 # Define API endpoint and Delta output path
 API_URL = "https://api.openbrewerydb.org/v1/breweries"
-BRONZE_PATH = "data/bronze/breweries_bronze"
+BRONZE_PATH = "data/bronze/breweries"
 
-def extract_data():
+def run():
     # Create Spark session with Delta support
     spark = SparkSession.builder \
         .appName("ExtractBreweryData") \
@@ -44,6 +44,9 @@ def extract_data():
         spark.stop()
 
 
+def func_test():
+    return "tttttttasdalsjdalskdjklsdkl"
+
 # Entry point
 if __name__ == "__main__":
-    extract_data()
+    run()

@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 
 # Path to the Delta table
-SILVER_PATH = "data/Silver/breweries_silver"
+SILVER_PATH = "data/silver/breweries"
 
 # Start a Spark session with Delta support
 spark = SparkSession.builder \

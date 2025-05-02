@@ -3,7 +3,7 @@ from pyspark.sql import SparkSession
 # Path to the Delta table
 dim_brewery = "data/gold/dim_brewery"
 dim_location = "data/gold/dim_location"
-fato_cervejarias = "data/gold/fact_brewery"
+fact_brewery = "data/gold/fact_brewery"
 
 # Start a Spark session with Delta support
 spark = SparkSession.builder \
@@ -31,8 +31,8 @@ print("\n-----------------------------------------\n")
 
 
 # Creating CSV fact_brewery
-df = spark.read.format("delta").load(fato_cervejarias)
-df.coalesce(1).write.format("csv").mode("overwrite").option("header", "true").save("data/csv/fato_cervejarias.csv")
+df = spark.read.format("delta").load(fact_brewery)
+df.coalesce(1).write.format("csv").mode("overwrite").option("header", "true").save("data/csv/fact_brewery.csv")
 print("\n-----------------------------------------\n")
 print("fact_brewery")
 print(df.printSchema())
