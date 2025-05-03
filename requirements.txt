@@ -1,5 +1,5 @@
-pandas
-pyspark
-delta-spark
-requests
-delta-spark==2.3.0
+pandas==1.5.3
+pyspark==3.4.1
+delta-spark==2.4.0
+requests==2.31.0
+cryptography==41.0.3

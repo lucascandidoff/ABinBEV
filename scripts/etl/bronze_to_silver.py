@@ -8,12 +8,20 @@ def run():
     BRONZE_PATH = "data/bronze/breweries"
     SILVER_PATH = "data/silver/breweries"
 
+    # spark = SparkSession.builder \
+    #     .appName("Transform Bronze to Silver") \
+    #     .config("spark.jars.packages", "io.delta:delta-core_2.12:2.1.0") \
+    #     .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
+    #     .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
+    #     .getOrCreate()
+    
     spark = SparkSession.builder \
         .appName("Transform Bronze to Silver") \
-        .config("spark.jars.packages", "io.delta:delta-core_2.12:2.1.0") \
+        .config("spark.jars.packages", "io.delta:delta-core_2.12:2.4.0") \
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
         .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
         .getOrCreate()
+   
 
     df_bronze = spark.read.format("delta").load(BRONZE_PATH)
 
@@ -51,6 +59,8 @@ def run():
         insert_dict = {col: f"source.{col}" for col in df_transformed.columns}
         insert_dict["inserted_at"] = current_date()
         
+        #Verificar problema no merfe
+
         delta_silver.merge(df_transformed, join_condition)\
                     .whenMatchedUpdate(set=set_dict)\
                     .whenNotMatchedInsert(values=insert_dict)\

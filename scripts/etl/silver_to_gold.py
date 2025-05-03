@@ -15,8 +15,11 @@ def run():
 
 
     # Paths for silver and gold layers
-    silver_path = os.getenv("SILVER_PATH", "data/silver/breweries")
-    gold_path = os.getenv("GOLD_PATH", "data/gold")
+    # silver_path = os.getenv("SILVER_PATH", "data/silver/breweries")
+    # gold_path = os.getenv("GOLD_PATH", "data/gold")
+
+    silver_path = "data/silver/breweries"
+    gold_path = "data/gold"
 
     # Read silver table
     df_silver = spark.read.format("delta").load(silver_path)
@@ -58,8 +61,6 @@ def run():
         "state", "state_province", "postal_code", "country",
         "latitude", "longitude"
     )
-
-    dim_location_selected.show()
 
     # ----------------------------
     # Fact table: fact_brewery

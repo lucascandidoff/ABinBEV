@@ -17,17 +17,17 @@ with DAG(
 
     bronze_task = BashOperator(
         task_id='run_bronze',
-        bash_command='python /opt/airflow/scripts/source_to_bronze.py'
+        bash_command='python /opt/airflow/scripts/etl/source_to_bronze.py'
     )
 
     silver_task = BashOperator(
         task_id='run_silver',
-        bash_command='python /opt/airflow/scripts/bronze_to_silver.py'
+        bash_command='python /opt/airflow/scripts/etl/bronze_to_silver.py'
     )
 
     gold_task = BashOperator(
         task_id='run_gold',
-        bash_command='python /opt/airflow/scripts/silver_to_gold.py'
+        bash_command='python /opt/airflow/scripts/etl/silver_to_gold.py'
     )
 
     bronze_task >> silver_task >> gold_task

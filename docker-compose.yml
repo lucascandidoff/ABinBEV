@@ -1,46 +1,110 @@
-version: '3.8'
+# A tag `version` é obsoleta na versão 2 do Compose Specification.
+# Recomenda-se removê-la em versões mais recentes do Docker Compose (v2+).
+# version: '3.8' # <-- Você pode remover esta linha para evitar o aviso
+
+x-airflow-env: &airflow-env
+  # Chave secreta para o webserver (altere em produção)
+  AIRFLOW__WEBSERVER__SECRET_KEY: super_secret_key
+  # Executor padrão (LocalExecutor para setup simples)
+  AIRFLOW__CORE__EXECUTOR: LocalExecutor
+  # String de conexão com o banco de dados
+  AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+  # Chave Fernet para criptografia (gere a sua em produção)
+  AIRFLOW__CORE__FERNET_KEY: '78zKzHNDZzXtjpSs0cOA752sAfuyJick7KkE6OKpGUQ='
+  # Não carregar exemplos de DAGs por padrão
+  AIRFLOW__CORE__LOAD_EXAMPLES: 'False'
+  # Dags não pausadas ao serem criadas
+  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'False'
+  # Corrigido: Aponta para o caminho padrão do OpenJDK 17 no Debian
+  JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+  # Nota: O PATH é geralmente configurado no Dockerfile, incluindo $JAVA_HOME/bin
 
 services:
+  # Serviço do banco de dados PostgreSQL
   postgres:
-    image: postgres:13
+    image: postgres:13 # Imagem oficial do PostgreSQL 13
     environment:
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
-      POSTGRES_DB: airflow
+      POSTGRES_USER: airflow # Usuário do banco
+      POSTGRES_PASSWORD: airflow # Senha do usuário
+      POSTGRES_DB: airflow # Nome do banco de dados
     volumes:
+      # Monta um volume nomeado para persistir os dados do banco
       - postgres_db:/var/lib/postgresql/data
+    # Define a política de restart (sempre tenta reiniciar a menos que explicitamente parado)
+    restart: always
 
+  # Serviço do webserver do Airflow
   airflow-webserver:
-    image: apache/airflow:2.8.1-python3.9
+    build:
+      context: . # Contexto de build (pasta atual)
+      dockerfile: Dockerfile # Nome do seu Dockerfile
+    # Depende do banco de dados estar pronto
     depends_on:
       - postgres
     environment:
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-      AIRFLOW__CORE__FERNET_KEY: ''
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'False'
+      # Importa variáveis de ambiente comuns
+      <<: *airflow-env
     volumes:
+      # Monta pastas locais para DAGs, scripts, dados e logs
+      # Certifique-se de que estas pastas existem na sua máquina local
       - ./dags:/opt/airflow/dags
       - ./scripts:/opt/airflow/scripts
       - ./data:/opt/airflow/data
+      - ./logs:/opt/airflow/logs
     ports:
+      # Mapeia a porta 8080 do host para a porta 8080 do container
       - "8080:8080"
-    command: >
-      bash -c "airflow db migrate && airflow users create --username admin --password admin --firstname Air --lastname Flow --role Admin --email admin@example.com && airflow webserver"
+    # Removido o entrypoint customizado. Usará o entrypoint padrão da imagem oficial.
+    # entrypoint: /bin/bash # <-- Removido
+    # Comando principal para rodar o webserver. O entrypoint cuidará da inicialização.
+    command: webserver
+    # Define a política de restart
+    restart: always
 
+  # Serviço do scheduler do Airflow
   airflow-scheduler:
-    image: apache/airflow:2.8.1-python3.9
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Depende do webserver estar pronto (que por sua vez depende do postgres)
     depends_on:
       - airflow-webserver
     environment:
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      <<: *airflow-env
     volumes:
       - ./dags:/opt/airflow/dags
       - ./scripts:/opt/airflow/scripts
       - ./data:/opt/airflow/data
-    command: >
-      bash -c "airflow scheduler"
+      - ./logs:/opt/airflow/logs
+    # Removido o entrypoint customizado. Usará o entrypoint padrão.
+    # command: bash -c "airflow scheduler" # <-- Simplificado
+    command: scheduler
+    # Define a política de restart
+    restart: always
 
+
+  # Serviço CLI para rodar comandos ad-hoc do Airflow
+  airflow-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Depende do banco de dados
+    depends_on:
+      - postgres
+    environment:
+      <<: *airflow-env
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+      - ./data:/opt/airflow/data
+      - ./logs:/opt/airflow/logs
+    # Removido entrypoint e command. Usará o entrypoint padrão da imagem
+    # para permitir a execução de comandos arbitrários via `docker compose run`.
+    # entrypoint: /bin/bash # <-- Removido
+    stdin_open: true # Permite input interativo (necessário para shells)
+    tty: true # Aloca um TTY (necessário para shells interativos)
+    # command: /bin/bash # <-- Removido
+
+# Definição do volume nomeado para persistência do banco de dados
 volumes:
   postgres_db:
