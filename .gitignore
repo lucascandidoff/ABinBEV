@@ -11,13 +11,11 @@ __pycache__/
 # Logs
 *.log
 
-# Arquivos de configuração temporários
 *.swp
 *.swo
 .env
 .env.*
 
-# Dados locais (caso deseje ignorar os dados gerados no projeto)
 data/bronze/
 data/silver/
 data/gold/
