@@ -28,19 +28,29 @@ Before you begin, ensure you have the following installed on your machine:
 
 ## 📁 Project Structure
 
-├── dags/                # Airflow DAG files
-│   └── brewery_pipeline_dag.py
-├── scripts/             # PySpark transformation scripts
-│   ├── bronze_layer.py
-│   ├── silver_layer.py
-│   └── gold_layer.py    # Your code to generate dimensions, fact, and aggregated table
-├── data/                # Local storage for Delta Lake tables (Bronze, Silver, Gold)
-│   ├── bronze/
-│   ├── silver/
-│   └── gold/
-├── Dockerfile           # Defines the custom Airflow image with Spark/Delta dependencies
-├── docker-compose.yaml  # Defines the services (Airflow Webserver, Scheduler, Postgres, CLI)
-└── requirements.txt     # Python dependencies for Airflow and Spark scripts
+The project follows this directory structure:
+
+* `./dags/`: Contains your Apache Airflow Directed Acyclic Graphs (DAGs).
+    * `etl_pipeline.py`: The main pipeline DAG definition.
+* `./scripts/`: Houses the Python scripts for data transformation using PySpark.
+    * `etl`: Scripts for etl
+        * `bronze_layer.py`: Script for processing data into the Bronze layer.
+        * `silver_layer.py`: Script for processing data into the Silver layer.
+        * `gold_layer.py`: Script for creating dimension, fact, and aggregated tables in the Gold layer.
+    * `validations`: Scripts for the layer validations
+        * `validation_bronze_layer.py`
+        * `validation_silver_layer.py`
+        * `validation_gold_layer.py` 
+* `./data/`: This directory is mounted into the Docker container and used for persistent storage of your Delta Lake tables (Bronze, Silver, Gold layers). This folder will be created when the pipeline runs.
+    * `bronze/`: Bronze layer Delta table.
+    * `silver/`: Silver layer Delta table.
+    * `gold/`: Gold layer Delta tables (e.g., `dim_brewery`, `dim_location`, `fact_brewery`, `brewery_counts_by_location_type`).
+* `./Dockerfile`: Defines the custom Docker image for Airflow, installing necessary dependencies like PySpark and Delta Lake.
+* `./docker-compose.yaml`: Configuration file for defining and running the multi-container Docker application (Postgres, Airflow services).
+* `./requirements.txt`: Lists the Python libraries required by the Airflow DAGs and Spark scripts.
+* `/.dockerignore`: Specifies files and directories that should be excluded from the Docker build context.
+* `/.gitignore`: Specifies files and directories that should be ignored by Git.
+
 
 *(Note: The `data` folder will be created and populated when you run the pipeline.)*
 
