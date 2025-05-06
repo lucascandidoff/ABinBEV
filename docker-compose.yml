@@ -1,72 +1,68 @@
-# A tag `version` é obsoleta na versão 2 do Compose Specification.
-# Recomenda-se removê-la em versões mais recentes do Docker Compose (v2+).
-# version: '3.8' # <-- Você pode remover esta linha para evitar o aviso
-
 x-airflow-env: &airflow-env
-  # Chave secreta para o webserver (altere em produção)
+  # Secret key for the webserver (change in production)
   AIRFLOW__WEBSERVER__SECRET_KEY: super_secret_key
-  # Executor padrão (LocalExecutor para setup simples)
+  # Default executor (LocalExecutor for simple setup)
   AIRFLOW__CORE__EXECUTOR: LocalExecutor
-  # String de conexão com o banco de dados
+  # Database connection string
   AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-  # Chave Fernet para criptografia (gere a sua em produção)
+  # Fernet key for encryption (generate your own in production)
   AIRFLOW__CORE__FERNET_KEY: '78zKzHNDZzXtjpSs0cOA752sAfuyJick7KkE6OKpGUQ='
-  # Não carregar exemplos de DAGs por padrão
+  # Don't load example DAGs by default
   AIRFLOW__CORE__LOAD_EXAMPLES: 'False'
-  # Dags não pausadas ao serem criadas
+  # DAGs are not paused when created
   AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'False'
-  # Corrigido: Aponta para o caminho padrão do OpenJDK 17 no Debian
+  # Corrected: Points to the default OpenJDK 17 path on Debian
   JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-  # Nota: O PATH é geralmente configurado no Dockerfile, incluindo $JAVA_HOME/bin
+  # Note: PATH is usually configured in the Dockerfile, including $JAVA_HOME/bin
 
 services:
-  # Serviço do banco de dados PostgreSQL
+  # PostgreSQL database service
   postgres:
-    image: postgres:13 # Imagem oficial do PostgreSQL 13
+    image: postgres:13 # Official PostgreSQL 13 image
     environment:
-      POSTGRES_USER: airflow # Usuário do banco
-      POSTGRES_PASSWORD: airflow # Senha do usuário
-      POSTGRES_DB: airflow # Nome do banco de dados
+      POSTGRES_USER: airflow # Database user
+      POSTGRES_PASSWORD: airflow # User password
+      POSTGRES_DB: airflow # Database name
     volumes:
-      # Monta um volume nomeado para persistir os dados do banco
+      # Mounts a named volume to persist database data
       - postgres_db:/var/lib/postgresql/data
-    # Define a política de restart (sempre tenta reiniciar a menos que explicitamente parado)
+    # Defines the restart policy (always tries to restart unless explicitly stopped)
     restart: always
 
-  # Serviço do webserver do Airflow
+  # Airflow webserver service
   airflow-webserver:
     build:
-      context: . # Contexto de build (pasta atual)
-      dockerfile: Dockerfile # Nome do seu Dockerfile
-    # Depende do banco de dados estar pronto
+      context: . # Build context (current folder)
+      dockerfile: Dockerfile # Your Dockerfile name
+    # Depends on the database being ready
     depends_on:
       - postgres
     environment:
-      # Importa variáveis de ambiente comuns
+      # Imports common environment variables
       <<: *airflow-env
     volumes:
-      # Monta pastas locais para DAGs, scripts, dados e logs
-      # Certifique-se de que estas pastas existem na sua máquina local
+      # Mounts local folders for DAGs, scripts, data, and logs
+      # Ensure these folders exist on your local machine
       - ./dags:/opt/airflow/dags
       - ./scripts:/opt/airflow/scripts
       - ./data:/opt/airflow/data
       - ./logs:/opt/airflow/logs
     ports:
-      # Mapeia a porta 8080 do host para a porta 8080 do container
+      # Maps host port 8080 to container port 8080
       - "8080:8080"
-    # Removido o entrypoint customizado. Usará o entrypoint padrão da imagem oficial.
-    # entrypoint: /bin/bash # <-- Removido
-    # Comando principal para rodar o webserver. O entrypoint cuidará da inicialização.
+    # Removed custom entrypoint. Will use the official image's default entrypoint.
+    # entrypoint: /bin/bash # <-- Removed
+    # Main command to run the webserver. The entrypoint will handle initialization.
     command: webserver
-    # Define a política de restart
+    # Defines the restart policy
     restart: always
 
-  # Serviço do scheduler do Airflow
+  # Airflow scheduler service
   airflow-scheduler:
     build:
       context: .
       dockerfile: Dockerfile
-    # Depende do webserver estar pronto (que por sua vez depende do postgres)
+    # Depends on the webserver being ready (which in turn depends on postgres)
     depends_on:
       - airflow-webserver
     environment:
@@ -76,19 +72,18 @@ services:
       - ./scripts:/opt/airflow/scripts
       - ./data:/opt/airflow/data
       - ./logs:/opt/airflow/logs
-    # Removido o entrypoint customizado. Usará o entrypoint padrão.
-    # command: bash -c "airflow scheduler" # <-- Simplificado
+    # Removed custom entrypoint. Will use the default entrypoint.
+    # command: bash -c "airflow scheduler" # <-- Simplified
     command: scheduler
-    # Define a política de restart
+    # Defines the restart policy
     restart: always
 
-
-  # Serviço CLI para rodar comandos ad-hoc do Airflow
+  # CLI service to run ad-hoc Airflow commands
   airflow-cli:
     build:
       context: .
       dockerfile: Dockerfile
-    # Depende do banco de dados
+    # Depends on the database
     depends_on:
       - postgres
     environment:
@@ -98,13 +93,13 @@ services:
       - ./scripts:/opt/airflow/scripts
       - ./data:/opt/airflow/data
       - ./logs:/opt/airflow/logs
-    # Removido entrypoint e command. Usará o entrypoint padrão da imagem
-    # para permitir a execução de comandos arbitrários via `docker compose run`.
-    # entrypoint: /bin/bash # <-- Removido
-    stdin_open: true # Permite input interativo (necessário para shells)
-    tty: true # Aloca um TTY (necessário para shells interativos)
-    # command: /bin/bash # <-- Removido
+    # Removed entrypoint and command. Will use the official image's default entrypoint
+    # to allow executing arbitrary commands via `docker compose run`.
+    # entrypoint: /bin/bash # <-- Removed
+    stdin_open: true # Allows interactive input (needed for shells)
+    tty: true # Allocates a TTY (needed for interactive shells)
+    # command: /bin/bash # <-- Removed
 
-# Definição do volume nomeado para persistência do banco de dados
+# Definition of the named volume for database persistence
 volumes:
   postgres_db:
